@@ -96,13 +96,13 @@ def handle_unsubscribe_all():
 class NodeSimple(Resource):
     def get(self, pubkey):
         node = lnd.get_node_channels(pubkey)
-        return MessageToDict(node)
+        return MessageToDict(node, preserving_proto_field_name=True,including_default_value_fields=True)
 
 class ChannelSimple(Resource):
     def get(self, channelId):
         if channelId.isnumeric() and len(channelId) == 18:
             channel = lnd.get_edge(int(channelId))
-            return MessageToDict(channel)
+            return MessageToDict(channel, preserving_proto_field_name=True,including_default_value_fields=True)
 
 api.add_resource(NodeSimple, '/node/<string:pubkey>')
 api.add_resource(ChannelSimple, '/channel/<string:channelId>')
@@ -111,4 +111,4 @@ api.add_resource(ChannelSimple, '/channel/<string:channelId>')
 if __name__ == '__main__':
     t = threading.Thread(target=channel_graph_worker)
     t.start()
-    socketio.run(app, host="0.0.0.0", debug=True)
+    socketio.run(app, host="0.0.0.0", debug=False)
