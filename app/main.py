@@ -32,21 +32,21 @@ def channel_graph_worker():
                 if update.identity_key in pubkeySubs:
                     pubkeySubs[update.identity_key].add(request.sid)
                     node = lnd.get_node_channels(update.identity_key)
-                    emit('pubkey', MessageToDict(node), json=True)
+                    emit('pubkey', MessageToDict(node, preserving_proto_field_name=True,including_default_value_fields=True), json=True)
         if len(response.channel_updates):
             for update in response.channel_updates:
                 if update.advertising_node in pubkeySubs:
                     channel = lnd.get_edge(int(update.chan_id))
                     for sid in pubkeySubs[update.advertising_node]:
-                        socketio.emit('channel', MessageToDict(channel), room=sid)
+                        socketio.emit('channel', MessageToDict(channel, preserving_proto_field_name=True,including_default_value_fields=True), room=sid)
                 if update.connecting_node in pubkeySubs:
                     channel = lnd.get_edge(int(update.chan_id))
                     for sid in pubkeySubs[update.connecting_node]:
-                        socketio.emit('channel', MessageToDict(channel), room=sid)
+                        socketio.emit('channel', MessageToDict(channel, preserving_proto_field_name=True,including_default_value_fields=True), room=sid)
                 if update.chan_id in channelSubs:
                     channel = lnd.get_edge(int(update.chan_id))
                     for sid in channelSubs[update.chanId]:
-                        socketio.emit('channel', MessageToDict(channel), room=sid)
+                        socketio.emit('channel', MessageToDict(channel, preserving_proto_field_name=True,including_default_value_fields=True), room=sid)
 
 @app.route('/')
 def index():
@@ -64,7 +64,7 @@ def handle_subscribe_pubkey(data):
         if pk not in pubkeySubs:
             pubkeySubs[pk] = set()
         pubkeySubs[pk].add(request.sid)
-        emit('pubkey', MessageToDict(node), json=True)
+        emit('pubkey', MessageToDict(node, preserving_proto_field_name=True,including_default_value_fields=True), json=True)
 
 @socketio.on('subscribe_channel')
 def handle_subscribe_channel(data):
@@ -74,7 +74,7 @@ def handle_subscribe_channel(data):
             if channelId not in channelSubs:
                 channelSubs[channelId] = set()
             channelSubs[channelId].add(request.sid)
-            emit('channel', MessageToDict(channel), json=True)
+            emit('channel', MessageToDict(channel, preserving_proto_field_name=True,including_default_value_fields=True), json=True)
 
 @socketio.on('unsubscribe_pubkey')
 def handle_unsubscribe_pubkey(data):
@@ -89,7 +89,7 @@ def handle_unsubscribe_channel(data):
 @socketio.on('unsubscribe_all')
 def handle_unsubscribe_all():
     for pubkey in pubkeySubs:
-        pubkey.remove(request.sid)
+        pubkeySubs[pubkey].remove(request.sid)
     for channel in channelSubs:
         channel.remove(request.sid)
 
