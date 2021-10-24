@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+        integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.min.js"
+        integrity="sha512-N5JbZMETkl+0SZh5l8OA2VxSfF120owfQyy54iAXTJIKuqAn3A9TrNz1ypB55o8aSU5MxaodEgv74wGUvgUynQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+
+<script type="text/javascript" charset="utf-8">
+    $(document).ready(function () {
+
+        var socket = io();
+
+        socket.on('connect', function () {
+            socket.emit('subscribe_pubkey', { data: ['0205a19356bbb7482057356aef070285a2ce6141d2448545210e9d575b57eddd37'] });
+            socket.emit('subscribe_channel', { data: ['762491522716860417'] });
+        });
+
+        socket.on('pubkey', function (msg, cb) {
+            $('#log').append('<br>' + $('<div/>').text(`Pubkey Update: ${msg.node.pubKey} - ${msg.node.alias}`).html());
+
+        });
+
+        socket.on('channel', function (msg, cb) {
+            $('#log').append('<br>' + $('<div/>').text(`Channel Update: ${msg.node1Pub} => ${msg.node2Pub} - ${msg.channelId} - ${JSON.stringify(msg.node1Policy)} - ${JSON.stringify(msg.node2Policy)}`).html());
+
+        });
+
+        socket.on('disconnect', function () {
+            socket.emit('unsubscribe_all');
+        });
+    });
+</script>
+
+<body>
+    <h1>LND PubSub Debug</h1>
+    <pre id="log"></pre>
+</body>
+
+</html>
