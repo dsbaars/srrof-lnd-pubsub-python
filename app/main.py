@@ -2,6 +2,8 @@ from dotenv.main import load_dotenv
 from flask import Flask, render_template, request
 from flask_cors import CORS, cross_origin
 from flask_socketio import SocketIO, send, emit
+from flask_restful import Resource, Api
+
 from lnd import Lnd
 from google.protobuf.json_format import MessageToJson, MessageToDict
 from dotenv import dotenv_values
@@ -13,6 +15,8 @@ async_mode = None
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode=async_mode)
 CORS(app)
+api = Api(app)
+
 
 lnd = Lnd('.', config['LNDHOST'])
 # Dit moet om de een of andere reden anders crasht het
@@ -88,6 +92,21 @@ def handle_unsubscribe_all():
         pubkey.remove(request.sid)
     for channel in channelSubs:
         channel.remove(request.sid)
+
+class NodeSimple(Resource):
+    def get(self, pubkey):
+        node = lnd.get_node_channels(pubkey)
+        return MessageToDict(node)
+
+class ChannelSimple(Resource):
+    def get(self, channelId):
+        if channelId.isnumeric() and len(channelId) == 18:
+            channel = lnd.get_edge(int(channelId))
+            return MessageToDict(channel)
+
+api.add_resource(NodeSimple, '/node/<string:pubkey>')
+api.add_resource(ChannelSimple, '/channel/<string:channelId>')
+
 
 if __name__ == '__main__':
     t = threading.Thread(target=channel_graph_worker)
