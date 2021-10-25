@@ -1,9 +1,9 @@
 from dotenv.main import load_dotenv
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_from_directory
 from flask_cors import CORS, cross_origin
 from flask_socketio import SocketIO, send, emit
 from flask_restful import Resource, Api
-
+import os.path
 from lnd import Lnd
 from google.protobuf.json_format import MessageToJson, MessageToDict
 from dotenv import dotenv_values
@@ -53,13 +53,21 @@ def channel_graph_worker():
 #     return render_template('index.html',
 #                            sync_mode=socketio.async_mode)
 
+dirname = os.path.dirname(__file__) 
+
 @app.route('/')
 def root():
     return app.send_static_file('index.html')
 
-@app.route('/<string:page>')
-def fallback(page):
-    return app.send_static_file('index.html')
+@app.route('/', defaults={'path': ''})
+@app.route('/<string:path>')
+@app.route('/<path:path>')
+def fallback(path):
+    if os.path.isfile(dirname + '/static/' + path):
+        return send_from_directory('static', path)
+    else:
+        return app.send_static_file("index.html")
+
 
 @socketio.on('message')
 def handle_message(data):
