@@ -57,6 +57,10 @@ def channel_graph_worker():
 def root():
     return app.send_static_file('index.html')
 
+@app.route('/<string:page>')
+def fallback(page):
+    return app.send_static_file('index.html')
+
 @socketio.on('message')
 def handle_message(data):
     print('received message: ' + data)
