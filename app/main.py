@@ -12,7 +12,7 @@ import threading
 config = dotenv_values(".env")
 
 async_mode = None
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static", static_url_path='')
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode=async_mode)
 CORS(app)
 api = Api(app)
@@ -48,10 +48,14 @@ def channel_graph_worker():
                     for sid in channelSubs[update.chanId]:
                         socketio.emit('channel', MessageToDict(channel, preserving_proto_field_name=True,including_default_value_fields=True), room=sid)
 
+# @app.route('/')
+# def index():
+#     return render_template('index.html',
+#                            sync_mode=socketio.async_mode)
+
 @app.route('/')
-def index():
-    return render_template('index.html',
-                           sync_mode=socketio.async_mode)
+def root():
+    return app.send_static_file('index.html')
 
 @socketio.on('message')
 def handle_message(data):
