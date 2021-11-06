@@ -2,7 +2,7 @@ from dotenv.main import load_dotenv
 from flask import Flask, render_template, request, send_from_directory
 from flask_cors import CORS, cross_origin
 from flask_socketio import SocketIO, send, emit
-from flask_restful import Resource, Api
+from flask_restful import Resource, Api, abort
 import os.path
 from lnd import Lnd
 from google.protobuf.json_format import MessageToJson, MessageToDict
@@ -76,11 +76,22 @@ def handle_message(data):
 @socketio.on('subscribe_pubkey')
 def handle_subscribe_pubkey(data):
     for pk in data['data']:
-        node = lnd.get_node_channels(pk)
-        if pk not in pubkeySubs:
-            pubkeySubs[pk] = set()
-        pubkeySubs[pk].add(request.sid)
-        emit('pubkey', MessageToDict(node, preserving_proto_field_name=True,including_default_value_fields=True), json=True)
+        try:
+            node = lnd.get_node_channels(pk)
+            if pk not in pubkeySubs:
+                pubkeySubs[pk] = set()
+            pubkeySubs[pk].add(request.sid)
+            emit('pubkey', MessageToDict(node, preserving_proto_field_name=True,including_default_value_fields=True), json=True)
+        except:
+            # Node does not hae channels yet
+            emptyNode = {
+                'channels': [],
+                'node': {
+                    'alias': pk,
+                    'pub_key': pk
+                }
+            }
+            emit('pubkey', emptyNode)
 
 @socketio.on('subscribe_channel')
 def handle_subscribe_channel(data):
@@ -111,15 +122,19 @@ def handle_unsubscribe_all():
 
 class NodeSimple(Resource):
     def get(self, pubkey):
-        node = lnd.get_node_channels(pubkey)
-        return MessageToDict(node, preserving_proto_field_name=True,including_default_value_fields=True)
+        try:
+            node = lnd.get_node_channels(pubkey)
+            return MessageToDict(node, preserving_proto_field_name=True,including_default_value_fields=True)
+        except:
+            abort (404, message={'error': 'node not found'})
 
 class ChannelSimple(Resource):
     def get(self, channelId):
         if channelId.isnumeric() and len(channelId) == 18:
             channel = lnd.get_edge(int(channelId))
             return MessageToDict(channel, preserving_proto_field_name=True,including_default_value_fields=True)
-
+        else:
+            return {'error': 'incorrect channel format'}
 api.add_resource(NodeSimple, '/node/<string:pubkey>')
 api.add_resource(ChannelSimple, '/channel/<string:channelId>')
 
