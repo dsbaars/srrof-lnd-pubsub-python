@@ -9,7 +9,7 @@ from google.protobuf.json_format import MessageToJson, MessageToDict
 from dotenv import dotenv_values
 import threading
 
-config = dotenv_values(".env")
+dotenv_values(".env")
 
 async_mode = None
 app = Flask(__name__, static_folder="static", static_url_path='')
@@ -18,7 +18,7 @@ CORS(app)
 api = Api(app)
 
 
-lnd = Lnd('.', config['LNDHOST'])
+lnd = Lnd('.', os.environ.get('LNDHOST'))
 # Dit moet om de een of andere reden anders crasht het
 edge = lnd.get_edge(int(762491522716860417))
 

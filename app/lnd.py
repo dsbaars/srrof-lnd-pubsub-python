@@ -12,7 +12,7 @@ from grpc_gen import router_pb2_grpc as lnrouterrpc
 from grpc_gen import lightning_pb2 as ln
 from grpc_gen import lightning_bp2_grpc as lnrpc
 
-config = dotenv_values(".env")
+dotenv_values(".env")
 
 
 MESSAGE_SIZE_MB = 50 * 1024 * 1024
@@ -38,9 +38,9 @@ class Lnd:
 
     @staticmethod
     def get_credentials(lnd_dir):
-        tls_certificate = open(os.path.expanduser(config['CERT']), 'rb').read()
+        tls_certificate = open(os.path.expanduser(os.environ.get('CERT')), 'rb').read()
         ssl_credentials = grpc.ssl_channel_credentials(tls_certificate)
-        with open(config['MACAROON'], "rb") as f:
+        with open(os.environ.get('MACAROON'), "rb") as f:
             macaroon = codecs.encode(f.read(), "hex")
         auth_credentials = grpc.metadata_call_credentials(
             lambda _, callback: callback([("macaroon", macaroon)], None)
