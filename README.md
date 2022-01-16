@@ -1,5 +1,9 @@
 # LND PubSub Server
 
+** 2022-01-16: Deprecated in favour of [ringtools/ringtools-server-ts](https://github.com/ringtools/ringtools-server-ts)
+ which has much better code quality and less dependencies **
+
+
 This is a PubSub Server for LND, which can be used for tooling (e.g. frontends) which are useful in creating Ring of Fires.
 
 After subscribing to specific pubkeys or channels you will get the current state and while the session is open, updates to both the node and the channel.
